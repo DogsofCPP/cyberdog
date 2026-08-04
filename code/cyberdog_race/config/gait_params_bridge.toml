@@ -1,0 +1,17 @@
+# Gait Params
+# Bridge crossing gait for curved/narrow bridge
+# Slower speed, higher lateral control, optimized for narrow path following
+# Step height moderate for stability on potentially uneven surface
+
+[[step]]
+type            = "usergait"
+body_vel_des    = [0.08, 0.0, 0.0]           # Slow forward velocity for bridge
+body_pos_des    = [0.0, 0.0, 0.0, 0.0, 0.0, 0.18]  # roll, pitch, yaw, x, y, z(0.18=body height)
+landing_pos_des = [0.12, 0.0, -0.02,  0.12, 0.0, -0.02,  0.12, 0.0, -0.02,  0.12, 0.0, -0.02]
+step_height     = [0.04, 0.04, 0.04, 0.04]  # 40mm step height for bridge
+weight          = [1.5, 1.5, 1.0, 2.0, 2.0, 2.5]  # Higher lateral control weights
+use_mpc_traj    = 0                            # 0=use position-based trajectory
+mu              = 0.85                         # Higher friction for bridge surface
+landing_gain    = 2.5                           # Stronger landing control
+gait_id         = 110                          # Standard USER_DEFINED gait ID per loco_interface.md
+duration        = 600

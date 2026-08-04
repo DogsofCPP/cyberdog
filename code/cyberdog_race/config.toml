@@ -1,0 +1,147 @@
+# CyberDog Race Configuration
+# Tuning parameters for the 6 race segments
+
+# ==================== 步态参数定义 ====================
+# 同一个 gait_id 可以有不同的底层参数
+# 这些参数会通过 ctrl.send_gait_file() 发送给控制器
+
+[gait_params.default]
+# 默认宽步态 (gait_id=27) - 正常间距 31cm
+wide_gait_y_offset = [0.04, -0.04, 0.04, -0.04]
+wide_gait_step_height = 0.08
+wide_gait_value = 0
+
+# 窄步态 (gait_id=5)
+narrow_gait_y_offset = [0.025, -0.035, 0.025, -0.035]
+narrow_gait_step_height = 0.04
+narrow_gait_value = 0
+
+# 身体参数
+body_height = 0.28
+step_height_max = 0.06
+
+[gait_params.segment_6]
+# Segment 6 专用宽步态 (gait_id=27) - 加宽到 41cm 用于穿球
+wide_gait_y_offset = [-0.05, 0.05, -0.05, 0.05]  # 41cm 间距
+wide_gait_step_height = 0.08
+wide_gait_value = 0
+
+# Segment 6 专用窄步态 - 前宽后窄用于夹球
+narrow_gait_y_offset = [0.04, -0.04, 0.065, -0.065]  # 前23cm/后18cm
+narrow_gait_step_height = 0.04
+narrow_gait_value = 0
+
+# Segment 6 身体参数 - 降低避免 lifted 检测
+body_height = 0.255
+step_height_max = 0.09
+
+# ==================== 导航参数 ====================
+[navigation]
+# Hardcoded waypoint navigation parameters
+waypoint_tol_m = 0.10      # how close to a waypoint before considering it reached (m)
+heading_tol_deg = 5.0      # how close to a heading before considering it reached (deg)
+turn_rate = 0.8            # angular velocity when turning in place (rad/s)
+
+# Default speeds for coordinate-based navigation
+nav_speed = 0.20           # normal forward speed (m/s)
+nav_speed_fast = 0.30      # fast forward speed (m/s)
+nav_speed_slow = 0.10      # slow forward speed (m/s)
+nav_max_vy = 0.12          # max lateral speed (m/s)
+nav_max_wz = 0.80          # max angular speed (rad/s)
+
+# Distance tolerances for behaviors
+approach_dist_m = 0.15      # distance to consider an object as "reached"
+
+# ==================== Segment 1 ====================
+[segment_1]
+gait_id = 27           # TROT_SLOW
+speed_mps = 0.15       # m/s forward speed
+timeout_s = 120.0
+corridor_target_m = 0.20  # target distance from each wall
+steer_gain = 0.8
+
+# ==================== Segment 2 ====================
+[segment_2]
+gait_id = 27           # TROT_SLOW
+approach_speed_mps = 0.20
+search_speed_mps = 0.18
+sweep_wz = 0.25        # turn rate during sweep (rad/s)
+min_ball_dist_m = 0.40
+timeout_s = 180.0
+total_balls = 4         # 4x4 grid, one orange target per row/column
+
+# ==================== Segment 3 ====================
+[segment_3]
+gait_id = 27
+normal_speed_mps = 0.30
+fast_speed_mps = 0.35
+slow_speed_mps = 0.15
+steer_gain = 1.2
+timeout_s = 120.0
+
+# ==================== Segment 4 ====================
+[segment_4]
+gait_id = 27
+speed_mps = 0.20
+stuck_timeout_s = 3.0
+timeout_s = 200.0
+
+# ==================== Segment 5 ====================
+[segment_5]
+# Segment 5 使用默认宽步态（正常间距 31cm）
+bridge_gait_id = 27    # TROT_SLOW on bridge (使用默认 y_offset)
+bridge_speed_mps = 0.12
+jump_gait_id = 7       # BOUND for jump
+jump_speed_mps = 0.20
+bridge_timeout_s = 15.0
+total_timeout_s = 120.0
+
+# ==================== Segment 6 ====================
+[segment_6]
+# Segment 6 使用加宽步态（41cm 用于穿球）
+gait_id = 27           # 同一个 ID，但会使用 gait_params.segment_6 中的 y_offset
+approach_speed_mps = 0.20
+kick_speed_mps = 0.35
+timeout_s = 120.0
+
+# Segment 6 专用坐标
+[segment_6.ball]
+x = 0.35
+y = 14.70
+
+[segment_6.final]
+x = 3.16
+y = 13.05
+yaw_deg = 0.0
+
+# ==================== 感知参数 ====================
+[perception]
+camera_fx = 615.0
+camera_fy = 615.0
+camera_cx = 320.0
+camera_cy = 240.0
+
+# Ball detection HSV thresholds
+[colors.orange_ball]
+lower_hsv = [5, 150, 150]
+upper_hsv = [25, 255, 255]
+
+[colors.light_blue_ball]
+lower_hsv = [85, 80, 80]
+upper_hsv = [130, 255, 255]
+
+[colors.yellow_boundary]
+lower_hsv = [15, 80, 80]
+upper_hsv = [40, 255, 255]
+
+[colors.white_ball]
+lower_hsv = [0, 0, 200]
+upper_hsv = [180, 30, 255]
+
+# ==================== 语音 ====================
+[voice]
+coke = "识别到可乐瓶"
+orange_ball = "识别到橙色小球"
+football = "识别到足球"
+height_bar = "识别到限高杆"
+obstacle = "识别到无法跨越障碍"

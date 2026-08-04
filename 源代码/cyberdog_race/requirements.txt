@@ -1,0 +1,22 @@
+# Python dependencies for CyberDog Race
+# Install with: pip3 install -r requirements.txt
+
+# Core LCM interface
+lcm>=1.4.0
+
+# Configuration
+toml>=0.10.0
+
+# Computer vision
+opencv-python-headless>=4.5.0
+numpy>=1.20.0
+
+# 3D transforms (optional but useful for coordinate transforms)
+transforms3d>=0.4.0
+
+# ROS2 Python bindings (container environment already has rclpy)
+# These are only needed for development outside the container
+# rclpy
+# sensor_msgs
+# geometry_msgs
+# cv_bridge
