@@ -1,10 +1,6 @@
-Metadata-Version: 1.2
+Metadata-Version: 2.1
 Name: cyberdog-race
 Version: 1.0.0
 Summary: CyberDog Race Controller for Xiaomi Cup 2026
-Home-page: UNKNOWN
 Author: CyberDog Race Team
-License: UNKNOWN
-Description: UNKNOWN
-Platform: UNKNOWN
 Requires-Python: >=3.8

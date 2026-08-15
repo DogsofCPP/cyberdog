@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: cyberdog_race
+Version: 1.0.0
+Summary: CyberDog Race Controller for Xiaomi Cup 2026
+Author: CyberDog Race Team
+Requires-Python: >=3.8
+Requires-Dist: lcm>=1.4.0
+Requires-Dist: toml>=0.10.0
+Requires-Dist: opencv-python-headless>=4.5.0
+Requires-Dist: numpy>=1.20.0
+Requires-Dist: transforms3d>=0.4.0
+Dynamic: author
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

@@ -1,0 +1,28 @@
+# Gait Def
+# Bridge crossing gait for curved/narrow bridge (body height = 0.18m)
+# Slower, more stable gait for narrow bridge traversal
+# Alternating diagonal pairs: FR+RL -> FL+RR -> FR+RL -> ...
+
+[[section]]
+contact  = [1, 1, 1, 1]
+duration = 6
+
+[[section]]
+contact  = [1, 0, 0, 1]
+duration = 8
+
+[[section]]
+contact  = [0, 0, 0, 0]
+duration = 4
+
+[[section]]
+contact  = [0, 1, 1, 0]
+duration = 8
+
+[[section]]
+contact  = [0, 0, 0, 0]
+duration = 4
+
+[[section]]
+contact  = [1, 1, 1, 1]
+duration = 6

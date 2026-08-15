@@ -5,7 +5,13 @@ setup(
     version='1.0.0',
     description='CyberDog Race Controller for Xiaomi Cup 2026',
     author='CyberDog Race Team',
-    packages=find_packages(),
+    # setup.py lives inside ``code/cyberdog_race/``.  We scan the parent
+    # (``code/``) so find_packages returns names with the ``cyberdog_race.``
+    # prefix that package_data matches against.  ``package_dir`` must be
+    # given explicitly so setuptools knows where the package sources live
+    # relative to the ``where`` directory.
+    packages=find_packages(where='..', include=['cyberdog_race*']),
+    package_dir={'': '..'},
     python_requires='>=3.8',
     # Per migration guide §2: the gait config files must be packaged so
     # `pip install -e .` on the real CyberDog2 keeps them reachable.

@@ -1,0 +1,17 @@
+# Gait Params
+# Low-crawl gait for height-bar passages.
+# In user-gait mode, body_pos_des z is a body-frame offset; negative lowers body.
+# Optimized parameters: slow speed, tiny stride, and moderate lowering to avoid leg jamming.
+
+[[step]]
+type            = "usergait"
+body_vel_des    = [0.045, 0.0, 0.0]           # Slow forward crawl
+body_pos_des    = [0.0, -0.14, 0.0, 0.0, 0.0, -0.16]  # roll, pitch, yaw, x, y, z(negative=lower)
+landing_pos_des = [0.055, 0.0, 0.0,  0.055, 0.0, 0.0,  0.055, 0.0, 0.0,  0.055, 0.0, 0.0]
+step_height     = [0.036, 0.036, 0.036, 0.036]  # Extra clearance reduces foot dragging
+weight          = [0.75, 0.75, 0.75, 0.95, 0.95, 1.35]
+use_mpc_traj    = 0                            # 0=use position-based trajectory
+mu              = 0.75
+landing_gain    = 1.4
+gait_id         = 110                          # Standard USER_DEFINED gait ID per loco_interface.md
+duration        = 500
