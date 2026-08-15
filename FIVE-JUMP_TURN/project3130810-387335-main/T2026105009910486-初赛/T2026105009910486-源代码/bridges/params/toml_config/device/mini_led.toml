@@ -1,0 +1,24 @@
+# mini led can toml 
+protocol = "can"
+name = "mini_led"
+
+can_interface = "can0"
+extended_frame = true
+canfd_enable = false
+timeout_us = 1234567
+
+
+[[cmd]]
+description = "mini enable on cmd"
+cmd_name = "enable_on"
+can_id = "0x02822200"
+ctrl_len = 0
+ctrl_data = []
+
+
+[[var]]
+description = "mini enable on ack"
+can_id = "0x02832200"
+var_name = "enable_on_ack"
+var_type = "i8"
+parser_param = [0, 0]

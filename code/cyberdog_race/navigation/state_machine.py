@@ -172,7 +172,14 @@ class RaceStateMachine:
             self.transition_to(RaceState.SEGMENT_2)
 
     def _check_and_calibrate_position(self):
-        """Re-check and calibrate position offset if Gazebo was reset."""
+        """Re-check and calibrate position offset if Gazebo was reset.
+
+        NOTE: Real robots have no Gazebo.  When ``mode == 'real'``,
+        ``race_main._init_ros2_perception`` already forces the perception
+        offset to (0,0,0), so this function is a no-op in real mode by
+        design (the ``status.get('gazebo', False)`` branch never fires).
+        See ``real_robot_migration_guide.md`` §7.
+        """
         status = self.perception.sensor_status()
         if status.get('gazebo', False):
             raw_x, raw_y, raw_yaw = self.perception.pose

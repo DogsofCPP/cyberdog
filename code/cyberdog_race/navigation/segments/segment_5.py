@@ -808,13 +808,13 @@ def _run_lateral_tilt_leg(ctrl, perception, target_xy, speed, tol_m, timeout_s, 
 
 
 def _upload_legacy_tilt_gait(ctrl):
-    """Upload the Segment-4 legacy under-bar gait for low-COM tilt walking."""
+    """Upload the Four-4 low-height gait for low-COM tilt walking."""
     try:
-        from .segment_4 import _upload_legacy_under_bar_gait
-        _upload_legacy_under_bar_gait(ctrl)
-        time.sleep(0.2)
+        from .segment_4 import _upload_low_height_gait
+        _upload_low_height_gait(ctrl)
+        time.sleep(0.5)
     except Exception as e:
-        print(f"[Seg5] Warning: legacy gait upload failed: {e}")
+        print(f"[Seg5] Warning: low-height gait upload failed: {e}")
 
 
 def _send_legacy_user_gait(ctrl, vx=0.0, vy=0.0, wz=0.0,
@@ -1436,11 +1436,11 @@ def low_crawl_turn(ctrl, perception,
     Returns:
         bool: True if target heading reached within tolerance (5 deg), False otherwise
     """
-    from .segment_4 import _upload_legacy_under_bar_gait, _body_pose_debug
+    from .segment_4 import _upload_low_height_gait, _body_pose_debug
 
     print("[Seg5] Low-crawl turn test")
-    print("[Seg5] Uploading legacy under-bar gait files...")
-    _upload_legacy_under_bar_gait(ctrl)
+    print("[Seg5] Uploading low-height gait files (Four-4 strategy)...")
+    _upload_low_height_gait(ctrl)
     time.sleep(0.5)
 
     try:

@@ -1,0 +1,28 @@
+# 该toml配置文件用于规定各模块使用灯的优先级,头灯、尾灯、mini led遵循一样的优先级配置
+# id越小优先级越高
+
+[[priority]]
+client = "lowpower"
+id = 0
+
+[[priority]]
+client = "bms"
+id = 1
+
+[[priority]]
+client = "connector"
+id = 2
+
+[[priority]]
+client = "vp"
+id = 3
+
+[[priority]]
+client = "tracking"
+id = 4
+
+[[priority]]
+client = "system"
+id = 5
+
+

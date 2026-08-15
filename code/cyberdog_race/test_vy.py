@@ -68,15 +68,25 @@ def main():
 
     perception = None
     spin_thread = None
-    if args.mode == 'sim':
+    rclpy_started = False
+    if args.mode in ('sim', 'real'):
         import threading
         import rclpy
         from cyberdog_race.perception.ros2_perception import ROS2Perception
 
-        rclpy.init()
+        if not rclpy.ok():
+            rclpy.init()
+        rclpy_started = True
+
         perception = ROS2Perception()
         print('[TestVy] Perception module: ROS2Perception')
-        print('[TestVy] Waiting for simulation sensors...')
+
+        if args.mode == 'real':
+            perception.set_position_offset(0.0, 0.0, 0.0)
+            print('[TestVy] Real mode: position offset forced to (0,0,0)')
+        else:
+            print('[TestVy] Waiting for simulation sensors...')
+
         ready = perception.wait_until_ready(timeout_s=25.0)
         status = perception.sensor_status()
         if not ready and status.get('odom', False):
@@ -84,17 +94,17 @@ def main():
         if not ready:
             print(f'[TestVy] Sensor readiness timeout: {status}')
             ctrl.shutdown()
-            rclpy.shutdown()
+            if rclpy.ok():
+                rclpy.shutdown()
             return
         print(f'[TestVy] Sensors ready: {status}')
 
         spin_thread = threading.Thread(target=_spin_node, args=(perception,), daemon=True)
         spin_thread.start()
     else:
-        from cyberdog_race.utils.mock_perception import MockPerception
-
-        perception = MockPerception()
-        print('[TestVy] Perception module: MockPerception')
+        print(f'[TestVy] Unknown mode: {args.mode}')
+        ctrl.shutdown()
+        return
 
     print('[TestVy] Standing up...')
     ctrl.stand_up_and_wait(height=args.body_height, wait_s=2.0)
@@ -145,9 +155,10 @@ def main():
     time.sleep(0.8)
 
     ctrl.shutdown()
-    if args.mode == 'sim':
-        import rclpy
-        rclpy.shutdown()
+    if rclpy_started:
+        import rclpy as _rclpy
+        if _rclpy.ok():
+            _rclpy.shutdown()
 
 
 if __name__ == '__main__':

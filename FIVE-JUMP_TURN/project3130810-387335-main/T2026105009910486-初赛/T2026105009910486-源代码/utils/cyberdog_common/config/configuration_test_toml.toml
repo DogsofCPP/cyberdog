@@ -1,0 +1,44 @@
+a = 10
+b = "cyberdog"
+c = true
+d = 0.1
+aa = ["foo", "bar", "baz"]
+bb = [1.1, 0.5, 880.123]
+cc = [1, 5, 8]
+
+[A]
+e = 2
+f = "cyberdog_A"
+g = true
+h = 0.2
+
+[A.c]
+e = 22222
+f = "cyberdog_c"
+g = false
+h = 0.2222
+
+[[B]]
+a = 3
+b = "cyberdog3"
+c = true
+d = 33.6
+
+[[B]]
+a = 4
+b = "robotlab4"
+c = false
+d = 44.2
+
+[[C]]
+a = 5555
+b = "cyberdogCCCC"
+c = true
+d = 555.6
+
+[[C]]
+a = 666
+b = "robotlabCCCCC"
+c = true
+d = 666.203
+

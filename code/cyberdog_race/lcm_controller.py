@@ -524,3 +524,89 @@ class LCMController:
 
             dur_ms = step.get('duration', 300)
             time.sleep(dur_ms / 1000.0 + 0.05)
+
+    def change_gait(self, def_path: str, full_path: str, params_path: str):
+        """Load and upload low-height gait TOML files via LCM.
+
+        Args:
+            def_path: Path to gait definition TOML file (low_Def.toml)
+            full_path: Path to gait params full TOML file
+            params_path: Path to gait params TOML file (low_Params.toml)
+        """
+        import toml
+        import os
+
+        steps = toml.load(params_path)
+        full_steps = {'step': []}
+        k = 0
+        for i in steps['step']:
+            cmd = {
+                'mode': 11, 'gait_id': 110, 'contact': 0, 'life_count': 0,
+                'vel_des': [0.0, 0.0, 0.0],
+                'rpy_des': [0.0, 0.0, 0.0],
+                'pos_des': [0.0, 0.0, 0.0],
+                'acc_des': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                'ctrl_point': [0.0, 0.0, 0.0],
+                'foot_pose': [0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+                'step_height': [0.0, 0.0],
+                'value': 0, 'duration': 0
+            }
+            cmd['duration'] = i['duration']
+            if i.get('type') == 'usergait':
+                cmd['mode'] = 11
+                cmd['gait_id'] = 110
+                cmd['vel_des'] = i['body_vel_des']
+                cmd['rpy_des'] = i['body_pos_des'][0:3]
+                cmd['pos_des'] = i['body_pos_des'][3:6]
+                cmd['foot_pose'][0:2] = i['landing_pos_des'][0:2]
+                cmd['foot_pose'][2:4] = i['landing_pos_des'][3:5]
+                cmd['foot_pose'][4:6] = i['landing_pos_des'][6:8]
+                cmd['ctrl_point'][0:2] = i['landing_pos_des'][9:11]
+                cmd['step_height'][0] = math.ceil(i['step_height'][0] * 1e3) + \
+                                        math.ceil(i['step_height'][1] * 1e3) * 1e3
+                cmd['step_height'][1] = math.ceil(i['step_height'][2] * 1e3) + \
+                                        math.ceil(i['step_height'][3] * 1e3) * 1e3
+                cmd['acc_des'] = i['weight']
+                cmd['value'] = i.get('use_mpc_traj', 0)
+                cmd['contact'] = math.floor(i.get('landing_gain', 0.5) * 1e1)
+                cmd['ctrl_point'][2] = i.get('mu', 0.3)
+            if k == 0:
+                full_steps['step'] = [cmd]
+            else:
+                full_steps['step'].append(cmd)
+            k += 1
+
+        with open(full_path, 'w') as f:
+            f.write("# Gait Params\n")
+            f.writelines(toml.dumps(full_steps))
+
+        with open(def_path, 'r') as file_obj_gait_def, open(full_path, 'r') as file_obj_gait_params:
+            self.send_gait_file(file_obj_gait_def.read())
+            time.sleep(0.5)
+            self.send_gait_file(file_obj_gait_params.read())
+            time.sleep(0.1)
+        print(f"[LCM] change_gait: uploaded gait files from {os.path.basename(def_path)}")
+
+    def user_gait_execute(self, duration_ms: int = 840):
+        """Execute user-defined gait with mode=62, gait_id=110.
+
+        Args:
+            duration_ms: Duration to sleep after sending command (default 840ms)
+        """
+        self._increment_life()
+        self._send_lock.acquire()
+        self._cmd.mode = 62
+        self._cmd.gait_id = 110
+        self._cmd.contact = 0
+        self._cmd.life_count = self._cmd.life_count
+        self._delay_cnt = 5
+        self._lc_send.publish(CHAN_CMD, self._cmd.encode())
+        self._send_lock.release()
+        time.sleep(duration_ms / 1000.0)
+
+    def user_gait_execute_reverse(self, duration_ms: int = 840):
+        """Execute user-defined gait in reverse with mode=62, gait_id=110.
+
+        Used for low_height_re gait (backward walking after height bar).
+        """
+        self.user_gait_execute(duration_ms)

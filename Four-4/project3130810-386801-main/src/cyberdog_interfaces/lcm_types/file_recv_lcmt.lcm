@@ -1,0 +1,3 @@
+struct file_recv_lcmt {
+    int8_t  result; // 动作文件下发查收，0: 成功， 1：异常；暂无格式检查
+}

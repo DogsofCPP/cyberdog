@@ -468,42 +468,56 @@ segment_6.py：宽步态、窄步态、带球参数
 
 ## 13. 推荐真机启动脚本
 
-可以新增：
+项目已经自带启动脚本 `code/cyberdog_race/launch.sh`，它会自动：
+
+- 检测并 source ROS2 (`/opt/ros/galactic/setup.bash` 或 `humble`)
+- 在 real 模式下设置 `PYTHONPATH=~/dograce`
+- 传递 `--mode=real`、`--timeout=900` 和任意额外参数
+- 解析第二参数为赛段号（例如 `segment 1` → `--test-segment=1`）
+
+脚本内注释对应本指南 §13。
+
+项目根同时提供了一个薄 wrapper `run_real.sh`，转调 `launch.sh real "$@"`，方便从仓库根目录直接运行：
 
 ```text
-~/dograce/run_real.sh
+.
+├── run_real.sh                 # wrapper: bash code/cyberdog_race/launch.sh real "$@"
+└── code/
+    └── cyberdog_race/
+        └── launch.sh           # 真正的启动器
 ```
 
-内容：
+**CyberDog2 端首次使用需赋权**：
 
 ```bash
-#!/bin/bash
-set -e
-
-cd ~/dograce
-source /opt/ros/galactic/setup.bash
-export PYTHONPATH=~/dograce:$PYTHONPATH
-
-python3 -m cyberdog_race.race_main --mode=real --timeout=900 "$@"
-```
-
-赋权：
-
-```bash
-chmod +x ~/dograce/run_real.sh
+chmod +x run_real.sh
+chmod +x code/cyberdog_race/launch.sh
 ```
 
 运行单赛段：
 
 ```bash
-~/dograce/run_real.sh --test-segment=1
+./run_real.sh segment 1
+# 等价于
+cd ~/dograce && bash code/cyberdog_race/launch.sh real segment 1
 ```
 
 运行完整比赛：
 
 ```bash
-~/dograce/run_real.sh
+./run_real.sh
+# 等价于
+cd ~/dograce && bash code/cyberdog_race/launch.sh real
 ```
+
+如果不想用 wrapper，直接调用 `launch.sh` 也可：
+
+```bash
+bash code/cyberdog_race/launch.sh real --perception-only
+bash code/cyberdog_race/launch.sh real --test-segment=2 --timeout=180
+```
+
+> **scp/rsync 复制后 `chmod +x` 会丢失**，每次拷贝到真机后都要重新赋权一次。
 
 ## 14. 真机运行前检查清单
 
@@ -518,6 +532,7 @@ chmod +x ~/dograce/run_real.sh
 [ ] PYTHONPATH=~/dograce 已 export
 [ ] /opt/ros/galactic/setup.bash 已 source
 [ ] espeak / espeak-ng 已安装（语音播报用）
+[ ] `pip install -e .` 之后 `python -c "import cyberdog_race.config, os; print(os.listdir(os.path.dirname(cyberdog_race.config.__file__)))"` 能看到 4 个 `.toml`（setup.py 已配置 `package_data`）
 ```
 
 ### 14.2 模式与感知
@@ -540,6 +555,7 @@ chmod +x ~/dograce/run_real.sh
 [ ] pure_damper 可用
 [ ] 低速 locomotion 可用（跑过 test_real_basic.py）
 [ ] 起点坐标已校准（odom 启动时狗放在 (0,0,0)，且朝向 +X）
+[ ] run_real.sh 与 code/cyberdog_race/launch.sh 都已 chmod +x
 ```
 
 ### 14.4 速度与赛段
@@ -570,3 +586,32 @@ chmod +x ~/dograce/run_real.sh
 ```
 
 不能只把代码移入 CyberDog2 后直接运行完整比赛。当前项目的仿真逻辑可以复用，但真机运行必须先完成真实感知、坐标校准、控制链路和安全动作验证。
+
+## 16. 后续待办（不在本轮范围）
+
+下面这些项目是有意识地推迟的，建议真机基础打通后再做：
+
+- **测试脚本收尾**（已在本轮完成）：
+  - `test_tilt_segment.py` / `test_seg4_from_entry.py` / `test_vy.py`
+    原本 real 模式分支硬编码 `MockPerception()`，会让真机拿到假里程计。
+    本轮已改为 `if mode in ('sim','real')` 都走 `ROS2Perception()`，
+    real 模式额外 `set_position_offset(0,0,0)`，finally 用 `rclpy_started`
+    跟踪优雅关闭。
+
+- **起点坐标自动校准**：目前依赖手动把狗放在赛道原点开机。
+  后续可加一段"开机后从 LiDAR 扫描赛道边界，反推 offset"的逻辑。
+
+- **LiDAR 赛道边界闭环校准**：里程计在 4-5 米外开始漂移。
+  后续可加周期性 LiDAR→赛道几何对齐，在 Seg1、Seg3、Seg5 等地方
+  把累积误差归零。架构占位见 `code/cyberdog_race/navigation/navigator.py`
+  现有的 `_check_deviation` / `_recover_deviation`。
+
+- **统一速度 `config.toml` 加载层**：目前 §11 的"调速"必须直接改源码常量。
+  后续可以把 §11 表里的所有数值搬到 `config/runtime_params.toml`，
+  通过 `nav_helper` 加载，真机和仿真用同一套加载机制。
+
+- **Segment 6 起点校准**：`_calibrate_fixed_start` 在真机起点不严格
+  对齐时会出现抓球点偏移，需要配合 LiDAR 闭环一并解决。
+
+- **MD 排版**：本文档部分小节（如 §2、§4）的反引号代码块与编号列表
+  拼接处有视觉错位，不影响信息传达，留待统一排版重排。

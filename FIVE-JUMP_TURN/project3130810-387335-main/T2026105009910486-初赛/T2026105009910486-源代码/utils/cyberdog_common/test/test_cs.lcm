@@ -1,0 +1,7 @@
+package lcmtestcs;
+
+struct lcmtestcs
+{
+  string cmd;
+  string data;
+}

@@ -1,0 +1,13 @@
+# ROS 2 / colcon build outputs
+/build/
+/install/
+/log/
+/.vscode/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Large local docs assets
+docs/cyberdog_demo_report_v4_20260531_170644.pptx
+docs/1.mp4

@@ -1,0 +1,15 @@
+[controller]
+actuators = ["test1", "test2"]
+states = ["SetUp", "TearDown", "SelfCheck", "Active", "DeActive", "Protected", "LowPower", "OTA", "Error"]
+default_time = 100 # milliseconds
+default_state = "Uninitialized"
+
+
+[actuator.test1]
+states = ["SetUp", "TearDown", "SelfCheck", "Active", "DeActive", "Protected", "LowPower", "OTA", "Error"]
+times = [3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000]
+
+
+[actuator.test2]
+states = ["SetUp", "TearDown", "SelfCheck", "Active", "DeActive", "Protected", "LowPower", "OTA", "Error"]
+times = [3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000, 3000]

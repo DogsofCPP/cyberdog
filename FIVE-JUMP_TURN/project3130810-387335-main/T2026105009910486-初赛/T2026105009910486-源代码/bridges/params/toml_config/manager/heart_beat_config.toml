@@ -1,0 +1,2 @@
+[heartbeat]
+node = ["audio", "device", "sensor", "motion_manager", "algorithm_manager"]

@@ -571,10 +571,10 @@ def _test_low_crawl_pose_hold(ctrl, perception, duration_s, low_height, low_pitc
 
 
 def _test_legacy_low_crawl_user_gait(ctrl, perception, duration_s, speed):
-    """Test the previous-year height-bar user gait."""
+    """Test the previous-year height-bar user gait (legacy)."""
     print("[Seg4-Test] Legacy user-gait low-crawl test")
     print("[Seg4-Test] Uploading legacy under-bar gait files...")
-    _upload_legacy_under_bar_gait(ctrl)
+    _upload_low_height_gait(ctrl)  # Use Four-4 strategy
     time.sleep(0.5)
 
     try:
@@ -932,10 +932,11 @@ def _legacy_low_crawl_to_target_xy(ctrl, perception, target_xy,
     body_z = max(-0.10, min(float(body_z), -0.02))
     timeout_s = max(2.0, float(timeout_s))
 
-    _upload_legacy_under_bar_gait(ctrl)
-    time.sleep(0.2)
+    # Use Four-4's low-height gait strategy
+    _upload_low_height_gait(ctrl)
+    time.sleep(0.5)
 
-    print(f"[Seg4] {label} started: speed={vx:.2f}m/s, body_z={body_z:.3f}, "
+    print(f"[Seg4] {label} started (Four-4): speed={vx:.2f}m/s, body_z={body_z:.3f}, "
           f"target_xy={target_xy}, tol={tol_m:.2f}m, timeout={timeout_s:.1f}s")
 
     reached = False
@@ -1090,35 +1091,23 @@ def _go_to_waypoint_low(ctrl, perception, waypoint_xy, target_heading, speed=0.1
     low_distance = abs(crawl_end_y - crawl_start_y)
     timeout_s = max(10.0, min(24.0, low_distance / max(LEGACY_SPEED, 0.01) * 2.8 + 6.0))
 
-    _upload_legacy_under_bar_gait(ctrl)
-    time.sleep(0.2)
-    print(f"[Seg4] Legacy low-crawl started: speed={LEGACY_SPEED:.2f}m/s, "
-          f"body_z={LEGACY_BODY_Z:.3f}, y {crawl_start_y:.2f}->{crawl_end_y:.2f}, "
+    # Use Four-4's low-height gait strategy
+    _upload_low_height_gait(ctrl)
+    time.sleep(0.5)
+    print(f"[Seg4] Low-height gait (Four-4) started: "
+          f"y {crawl_start_y:.2f}->{crawl_end_y:.2f}, "
           f"timeout={timeout_s:.1f}s")
     reached_low = False
+
+    # Calculate number of gait cycles based on distance
+    # Each cycle takes ~0.84s (from Four-4's implementation)
+    num_cycles = max(1, int(low_distance / LEGACY_SPEED / 0.84))
+
     for attempt in range(1, 4):
-        print(f"[Seg4] Legacy low-crawl attempt {attempt}/3")
-        if hasattr(ctrl, 'user_gait_locomotion'):
-            ctrl.user_gait_locomotion(
-                vx=LEGACY_SPEED,
-                body_z=LEGACY_BODY_Z,
-                pitch_rad=0.0,
-                step_height=(0.03, 0.03),
-                contact=1,
-                value=1,
-                duration_ms=int(timeout_s * 1000))
-        else:
-            ctrl.execute_gait_steps([
-                dict(mode=11, gait_id=110, contact=1,
-                     vel_des=[LEGACY_SPEED, 0.0, 0.0, 0.0],
-                     rpy_des=[0.0, 0.0, 0.0],
-                     pos_des=[0.0, 0.0, LEGACY_BODY_Z],
-                     acc_des=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                     ctrl_point=[0.0, 0.0, 0.0],
-                     foot_pose=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-                     step_height=[0.03, 0.03],
-                     value=1, duration=int(timeout_s * 1000)),
-            ])
+        print(f"[Seg4] Low-height gait attempt {attempt}/3, cycles={num_cycles}")
+        for _ in range(num_cycles):
+            ctrl.user_gait_execute(duration_ms=840)
+            time.sleep(0.02)  # Small gap between cycles
 
         crawl_start = time.perf_counter()
         last_progress_t = crawl_start
@@ -1315,16 +1304,43 @@ def _format_legacy_gait_params():
     return ''.join(lines)
 
 
-def _upload_legacy_under_bar_gait(ctrl):
-    gait_def = _format_legacy_gait_def()
-    gait_params = _format_legacy_gait_params()
-    ctrl.send_gait_file(gait_def)
-    time.sleep(0.5)
-    ctrl.send_gait_file(gait_params)
-    time.sleep(0.15)
-    print("[Seg4] Legacy under-bar gait (id=110) uploaded "
-          f"({gait_def.count('[[section]]')} sections, "
-          f"{gait_params.count('[[step]]')} steps)")
+def _upload_low_height_gait(ctrl):
+    """Upload low-height gait using Four-4 strategy.
+
+    Loads TOML files from config/ directory and uploads them via LCM.
+    This uses Four-4's proven low posture gait for height-bar passages.
+    """
+    seg_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    config_dir = os.path.join(seg_dir, 'config')
+
+    def_path = os.path.join(config_dir, 'gait_def_low_height.toml')
+    full_path = os.path.join(config_dir, 'gait_params_low_height_full.toml')
+    params_path = os.path.join(config_dir, 'gait_params_low_height.toml')
+
+    try:
+        ctrl.change_gait(def_path, full_path, params_path)
+        print("[Seg4] Low-height gait (Four-4 strategy) uploaded")
+    except Exception as e:
+        print(f"[Seg4] Warning: Low-height gait upload failed: {e}")
+
+
+def _upload_low_height_re_gait(ctrl):
+    """Upload low-height reverse gait for exiting height-bar passages.
+
+    Uses the low_height_re TOML files (backward walking).
+    """
+    seg_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    config_dir = os.path.join(seg_dir, 'config')
+
+    def_path = os.path.join(config_dir, 'gait_def_low_height_re.toml')
+    full_path = os.path.join(config_dir, 'gait_params_low_height_re_full.toml')
+    params_path = os.path.join(config_dir, 'gait_params_low_height_re.toml')
+
+    try:
+        ctrl.change_gait(def_path, full_path, params_path)
+        print("[Seg4] Low-height reverse gait uploaded")
+    except Exception as e:
+        print(f"[Seg4] Warning: Low-height reverse gait upload failed: {e}")
 
 
 def _upload_low_crawl_gait(ctrl):
@@ -1435,37 +1451,35 @@ def _handle_scene_objects(ctrl, perception, speaker, announced, obj_handled,
 
 
 def _pass_under_height_bar(ctrl):
-    """Pass under a height bar with low-crawl posture."""
+    """Pass under a height bar with low-crawl posture and low-crawl return.
+
+    Uses Four-4's low_height gait (forward) and low_height_re gait (backward)
+    instead of turning around, for smoother operation.
+    """
+    # Lower body first
     ctrl.set_height(0.10, duration_ms=400)
     time.sleep(0.5)
-    # Send initial pitch command
     ctrl.look_forward(-0.25, duration_ms=300)
     time.sleep(0.4)
-    ctrl.locomotion(
-        gait_id=GAIT_TROT_SLOW,
-        vx=0.10, vy=0.0, wz=0.0,
-        step_h_max=0.018, step_h_min=0.018,
-        body_height=0.10,
-        body_pitch=-0.25,
-        duration_ms=0,
-    )
-    # Maintain low posture during passage
-    last_update = time.perf_counter()
-    start = time.perf_counter()
-    while time.perf_counter() - start < 2.0:
-        now = time.perf_counter()
-        if now - last_update > 0.3:
-            ctrl.look_forward(-0.25, duration_ms=200)
-            ctrl.locomotion(
-                gait_id=GAIT_TROT_SLOW,
-                vx=0.10, vy=0.0, wz=0.0,
-                step_h_max=0.018, step_h_min=0.018,
-                body_height=0.10,
-                body_pitch=-0.25,
-                duration_ms=0,
-            )
-            last_update = now
-        time.sleep(0.1)
+
+    # Forward pass through the bar using low_height gait
+    _upload_low_height_gait(ctrl)
+    time.sleep(0.5)
+    print("[Seg4] Low-height forward pass through height bar")
+    for _ in range(8):
+        ctrl.user_gait_execute(duration_ms=840)
+        time.sleep(0.02)
+
+    # Wait a moment, then use low_height_re for backward return (no turning)
+    time.sleep(0.3)
+    print("[Seg4] Low-height reverse pass (no turn)")
+    _upload_low_height_re_gait(ctrl)
+    time.sleep(0.5)
+    for _ in range(6):
+        ctrl.user_gait_execute(duration_ms=840)
+        time.sleep(0.02)
+
+    # Restore normal height
     ctrl.set_height(0.22, duration_ms=400)
     time.sleep(0.5)
 

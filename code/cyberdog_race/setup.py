@@ -7,6 +7,12 @@ setup(
     author='CyberDog Race Team',
     packages=find_packages(),
     python_requires='>=3.8',
+    # Per migration guide §2: the gait config files must be packaged so
+    # `pip install -e .` on the real CyberDog2 keeps them reachable.
+    package_data={
+        'cyberdog_race': ['config/*.toml'],
+    },
+    include_package_data=False,
     install_requires=[
         'lcm>=1.4.0',
         'toml>=0.10.0',
